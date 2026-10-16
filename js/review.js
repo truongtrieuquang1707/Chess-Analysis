@@ -422,19 +422,17 @@
       if (okCls && !isBest && mA && mA.color !== c && mA.n <= 3 && !(mB && mB.color !== c)) cls = 'mistake';
       else if (okCls && !isBest && mB && mB.color === c && mB.n <= 3 && !(mA && mA.color === c)) cls = 'inaccuracy';
 
-      // Lý thuyết khai cuộc: chỉ công nhận khi engine không chê nước này
-      var prevSans = sans.slice(), bookNote = '', theory = null;
+      // Lý thuyết khai cuộc: nước nằm trong sách thì không chấm điểm, dù engine có ưa hay không
+      var prevSans = sans.slice(), theory = null;
       sans.push(h.san);
       if (inBook) {
-        var known = OP.known(sans);
-        if (known && cls !== 'forced' && loss <= 8) { cls = 'book'; loss = 0; }
+        if (OP.known(sans)) { cls = 'book'; loss = 0; }
         else {
           inBook = false;
           // chỉ ghi tên biến khi nó khác tên khai cuộc hiện tại, tránh lặp lại
           var cur = OP.name(prevSans);
           theory = OP.continuations(prevSans).filter(function (t) { return t.san !== h.san; }).slice(0, 4)
             .map(function (t) { return { san: t.san, name: cur && t.name === cur.name ? '' : t.name }; });
-          if (known) bookNote = T('t_dubiousBook');
         }
       }
       var opening = fromStart ? OP.name(sans) : null;
@@ -453,7 +451,6 @@
         var wb = whyBad({ c: c, h: h, ply: i, before: before, after: after, gB: gB, gA: gA, bestL: bestL, replyL: replyL, wpB: wpB });
         text = wb.text; kind = wb.kind;
       }
-      if (bookNote) text = bookNote + ' ' + text;
 
       var phase = phaseOf(gB, i), acv = Math.max(0, Math.min(100, 103.1668 * Math.exp(-0.04354 * loss) - 3.1669));
       recs.push({
