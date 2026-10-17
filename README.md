@@ -21,5 +21,10 @@ Không có mạng thì app dùng engine và danh sách khai cuộc dự phòng, 
 | `js/engine.js` | Nạp Stockfish (WebAssembly) trong Web Worker |
 | `js/openings.js` | Cơ sở dữ liệu khai cuộc |
 | `js/review.js` | Chấm điểm và viết nhận xét từng nước |
+| `js/music.js` | Nhạc nền tự tổng hợp bằng Web Audio |
 | `js/i18n.js` | Chuỗi tiếng Việt / tiếng Anh |
 | `js/app.js` | Bàn cờ, đồng hồ, máy theo Elo, màn hình phân tích |
+
+## Ghi công
+
+Hình quân cờ: bộ *Cburnett* của Colin M.L. Burnett (CC BY-SA 3.0), lấy từ Lichess, đã đổi màu cho dịu mắt hơn.
