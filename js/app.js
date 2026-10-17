@@ -36,17 +36,18 @@
   }
 
   // ---------- âm thanh ----------
-  var actx = null;
+  var sfxVol = 70;
+  try { var sv = localStorage.getItem('chess.sfx'); if (sv !== null) sfxVol = +sv; } catch (e) { /* bỏ qua */ }
   function sound(kind) {
-    if (!S.sound) return;
+    if (!S.sound || !sfxVol) return;
     try {
-      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      var actx = window.Music.ctx(), k = Math.pow(sfxVol / 70, 2); // 70 = mức mặc định, giữ âm lượng như trước
       var t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
       var f = kind === 'capture' ? 150 : kind === 'check' ? 330 : kind === 'end' ? 440 : 215;
       o.type = 'triangle';
       o.frequency.setValueAtTime(f, t);
       o.frequency.exponentialRampToValueAtTime(f / 2, t + (kind === 'end' ? 0.35 : 0.09));
-      g.gain.setValueAtTime(kind === 'capture' ? 0.34 : 0.22, t);
+      g.gain.setValueAtTime((kind === 'capture' ? 0.34 : 0.22) * k, t);
       g.gain.exponentialRampToValueAtTime(0.001, t + (kind === 'end' ? 0.4 : 0.11));
       o.connect(g); g.connect(actx.destination);
       o.start(t); o.stop(t + 0.45);
@@ -918,9 +919,44 @@
     if (S.review) goPly(S.ply);
   };
   $('btnSound').onclick = function () { S.sound = !S.sound; this.textContent = S.sound ? '🔊' : '🔇'; };
+  // bảng nhạc nền
+  var M = window.Music, musicPanel = $('musicPanel');
+  function renderMusic() {
+    var st = M.state();
+    $('muOn').checked = st.on;
+    $('muVol').value = st.vol;
+    $('sfxVol').value = sfxVol;
+    $('btnMusic').classList.toggle('on', st.on);
+    $('muList').innerHTML = T('mu_tracks').map(function (tr, i) {
+      var cur = i === st.track;
+      return '<li data-i="' + i + '" class="' + (cur ? 'on' : '') + '"><i>' + (cur && st.on ? '♪' : i + 1) + '</i>' +
+        tr[0] + '<small>' + tr[1] + '</small></li>';
+    }).join('');
+  }
+  M.onChange(renderMusic);
+  $('btnMusic').onclick = function (e) { e.stopPropagation(); musicPanel.hidden = !musicPanel.hidden; };
+  document.addEventListener('pointerdown', function (e) {
+    if (!musicPanel.hidden && !musicPanel.contains(e.target) && e.target !== $('btnMusic')) musicPanel.hidden = true;
+  });
+  $('muOn').onchange = function () { M.setOn(this.checked); };
+  $('muList').onclick = function (e) {
+    var li = e.target.closest('li');
+    if (!li) return;
+    var i = +li.dataset.i;
+    if (i === M.state().track && M.state().on) return;
+    M.setTrack(i);
+    if (!M.state().on) M.setOn(true);
+  };
+  $('muVol').oninput = function () { M.setVolume(this.value); };
+  $('sfxVol').oninput = function () { sfxVol = +this.value; };
+  $('sfxVol').onchange = function () {
+    try { localStorage.setItem('chess.sfx', sfxVol); } catch (e) { /* bỏ qua */ }
+    sound('move');
+  };
+
   $('btnLang').onclick = function () {
     window.I18N.set(window.I18N.get() === 'vi' ? 'en' : 'vi');
-    renderEngineTag(); renderEloLabel(); renderStatus(); renderPlayers();
+    renderEngineTag(); renderEloLabel(); renderStatus(); renderPlayers(); renderMusic();
     $('progressText').textContent = T('progress', prog[0], prog[1]);
     if (S.review) {
       // lời nhận xét được sinh theo ngôn ngữ nên phải dựng lại từ kết quả phân tích đã lưu
@@ -978,6 +1014,7 @@
   }
 
   window.I18N.apply();
+  renderMusic();
   renderEngineTag();
   syncDialog();
   startFromPrefs();

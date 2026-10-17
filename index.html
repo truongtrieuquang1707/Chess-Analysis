@@ -62,6 +62,17 @@
       <button class="btn" id="btnResign" data-i18n="btn_resign">Đầu hàng</button>
       <button class="btn" id="btnFlip" data-i18n-title="tip_flip">⇅</button>
       <button class="btn" id="btnSound" data-i18n-title="tip_sound">🔊</button>
+      <button class="btn" id="btnMusic" data-i18n-title="tip_music">🎵</button>
+    </div>
+
+    <div class="music-panel" id="musicPanel" hidden>
+      <div class="mp-head">
+        <b data-i18n="mu_title">Nhạc nền</b>
+        <label class="switch"><input type="checkbox" id="muOn"><span></span></label>
+      </div>
+      <ol class="mp-list" id="muList"></ol>
+      <label class="mp-vol"><span data-i18n="mu_vol">Âm lượng nhạc</span><input type="range" id="muVol" min="0" max="100"></label>
+      <label class="mp-vol"><span data-i18n="mu_sfx">Âm lượng hiệu ứng</span><input type="range" id="sfxVol" min="0" max="100"></label>
     </div>
   </aside>
 </main>
@@ -109,8 +120,9 @@
 </dialog>
 
 <script src="js/i18n.js"></script>
-<script src="js/openings.js"></script>
 <script src="js/chess.js"></script>
+<script src="js/openings.js"></script>
+<script src="js/music.js"></script>
 <script src="js/engine.js"></script>
 <script src="js/review.js"></script>
 <script src="js/app.js"></script>
