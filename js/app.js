@@ -547,6 +547,8 @@
     stopExplore();
     S.retry = null;
     $('review').hidden = !on;
+    // khi phân tích, bảng bên phải giữ chiều cao cố định để nút tiến/lùi không nhảy theo độ dài lời nhận xét
+    document.querySelector('.panel').classList.toggle('reviewing', on);
     $('nav').hidden = true;
     $('reviewBody').hidden = true;
     $('progress').hidden = false;

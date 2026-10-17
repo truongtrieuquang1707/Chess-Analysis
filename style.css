@@ -200,6 +200,8 @@ dialog h2 { margin: 0 0 14px; font-size: 18px; }
   .board-area.with-eval { --bs: min(calc(100vw - 54px), calc(100vh - 100px)); }
   .panel { width: min(100%, 560px); height: auto; }
   .moves { max-height: 132px; }
+  .panel.reviewing { height: auto; }
+  .panel.reviewing .review { flex: none; height: 400px; }
 }
 
 /* ---------- đồng hồ, ngôn ngữ, Elo ---------- */
@@ -221,6 +223,8 @@ input[type=range] { width: 100%; accent-color: var(--accent); margin: 2px 0 0; }
 /* ---------- học tập: khai cuộc, mẹo, xem biến, luyện tập, bài học ---------- */
 .status small.opening { color: #c9a77a; margin-top: 2px; }
 .review { overflow-y: auto; min-height: 0; flex: 0 1 auto; }
+.panel.reviewing { height: calc(var(--bs) + 72px); }
+.panel.reviewing .review { flex: 1 1 0; }
 .moves { flex: 0 1 132px; min-height: 64px; max-height: 132px; font-size: 13px; grid-template-columns: 30px 1fr 1fr; }
 .summary .op-name { grid-column: 1 / -1; text-align: center; color: #c9a77a; font-size: 12px; padding-bottom: 4px; }
 .comment p.op { color: #c9a77a; font-size: 13px; }
