@@ -2,7 +2,8 @@
   'use strict';
   var C = window.Chess, Game = C.Game, R = window.Review, T = window.I18N.t;
   var $ = function (id) { return document.getElementById(id); };
-  var GLYPH = ['', '♟', '♞', '♝', '♜', '♛', '♚'].map(function (g) { return g && g + '︎'; });
+  // lớp CSS chứa hình quân: wP, bQ... (chỉ số theo mã quân trong chess.js)
+  function pieceCls(code) { return 'wb'[code >> 3] + ' PNBRQK'[code & 7]; }
   // [phút, giây cộng thêm]; null = không tính giờ
   var TCS = [null, [1, 0], [3, 0], [3, 2], [5, 0], [10, 0], [15, 10], [30, 0]];
   var REVIEW_OPTS = { stockfish: { depth: 16, movetime: 1200 }, builtin: { depth: 6, movetime: 700 } };
@@ -76,8 +77,7 @@
 
   function makePieceEl(code) {
     var el = document.createElement('div');
-    el.className = 'piece ' + (code < 8 ? 'w' : 'b');
-    el.textContent = GLYPH[code & 7];
+    el.className = 'piece ' + pieceCls(code);
     return el;
   }
 
@@ -331,7 +331,7 @@
     var p = pieceAt(inf.from);
     if (p) {
       p.sq = inf.to;
-      if (inf.promo) { p.code = inf.promo | inf.color << 3; p.el.textContent = GLYPH[inf.promo]; }
+      if (inf.promo) { p.code = inf.promo | inf.color << 3; p.el.className = 'piece ' + pieceCls(p.code); }
       if (animate) { raise(p.el); place(p.el, inf.to); } else snap(p.el, inf.to);
     }
     syncPieces(g.b, true);
@@ -482,20 +482,42 @@
     $('btnResign').disabled = S.mode !== 'play' || !!S.over;
   }
 
-  function renderPlayers() {
+  // Quân mỗi bên đã ăn được (suy ra từ số quân còn trên bàn, nên phong cấp cũng được tính đúng về vật chất)
+  function captures() {
     var counts = [[0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0]], val = [0, 1, 3, 3, 5, 9, 0], init = [0, 8, 2, 2, 2, 1, 1];
-    var mat = [0, 0], i, sides = T('sides');
+    var mat = [0, 0], i;
     for (i = 0; i < 64; i++) { var p = view.b[i]; if (p) { counts[p >> 3][p & 7]++; mat[p >> 3] += val[p & 7]; } }
+    return [0, 1].map(function (c) {
+      var html = '', n = 0;
+      for (var ty = 1; ty <= 5; ty++) {
+        var k = Math.max(0, init[ty] - counts[c ^ 1][ty]);
+        if (!k) continue;
+        html += '<span class="cap-grp">';
+        for (var j = 0; j < k; j++) html += '<i class="pi ' + pieceCls(ty | (c ^ 1) << 3) + '"></i>';
+        html += '</span>';
+        n += k;
+      }
+      return { html: html, n: n, diff: mat[c] - mat[c ^ 1] };
+    });
+  }
+
+  function renderPlayers() {
+    var sides = T('sides'), cap = captures();
     [['playerBottom', S.orient], ['playerTop', S.orient ^ 1]].forEach(function (x) {
-      var el = $(x[0]), c = x[1], name = sides[c], cap = '';
+      var el = $(x[0]), c = x[1], name = sides[c];
       if (S.opp === 'ai') name = c === S.human ? T('you', sides[c]) : T('bot', S.elo);
-      for (var ty = 1; ty <= 5; ty++) for (var k = counts[c ^ 1][ty]; k < init[ty]; k++) cap += GLYPH[ty];
-      var diff = mat[c] - mat[c ^ 1];
       var pn = el.querySelector('.pname');
       pn.textContent = name;
       pn.classList.toggle('turn', view.turn === c && !(S.over && S.mode === 'play'));
-      el.querySelector('.pcap').innerHTML = cap + (diff > 0 ? '<em>+' + diff + '</em>' : '');
+      el.querySelector('.pcap').innerHTML = cap[c].html + (cap[c].diff > 0 ? '<em>+' + cap[c].diff + '</em>' : '');
     });
+    // khung "quân đã ăn" trong bảng bên phải, bên đang ở dưới bàn cờ đứng sau
+    $('captures').innerHTML = [S.orient ^ 1, S.orient].map(function (c) {
+      var who = S.opp === 'ai' ? (c === S.human ? T('you', sides[c]) : T('bot', S.elo)) : sides[c];
+      return '<div class="cap-row"><span class="cap-who"><i class="pi ' + pieceCls(6 | c << 3) + '"></i>' + who + '</span>' +
+        '<span class="cap-pcs">' + (cap[c].n ? cap[c].html : '<span class="cap-none">' + T('cap_none') + '</span>') + '</span>' +
+        (cap[c].diff > 0 ? '<em>+' + cap[c].diff + '</em>' : '') + '</div>';
+    }).join('');
     renderClocks(S.mode === 'review' && S.tc ? clockAt(S.ply) : null);
   }
 
